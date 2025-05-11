@@ -10,47 +10,39 @@
       margin: 0;
       padding: 0;
     }
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-    /* 왼쪽 상단 버튼 영역 */
     #topControls {
       position: absolute;
       top: 10px;
       left: 10px;
-      z-index: 4;
+      z-index: 3;
       display: flex;
-      flex-direction: column; /* 버튼을 세로로 나열 */
-      gap: 8px;
+      gap: 5px;
     }
     .top-btn {
       background: white;
       border: 1px solid #ccc;
       border-radius: 6px;
-      padding: 6px 12px;
-      font-size: 13px;
+      padding: 6px 10px;
+      font-size: 12px;
       cursor: pointer;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    /* 오른쪽 상단 검색창 */
     #searchBox {
       position: absolute;
       top: 10px;
       right: 10px;
-      z-index: 4;
+      z-index: 3;
       background: white;
       padding: 8px;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
       display: flex;
-      align-items: center;
       gap: 5px;
+      align-items: center;
     }
-    /* 검색 결과 리스트 */
     #resultList {
       position: absolute;
-      top: 70px; /* 검색창보다 충분히 아래 */
+      top: 60px;
       left: 50%;
       transform: translateX(-50%);
       width: 90%;
@@ -59,8 +51,7 @@
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      z-index: 3;
-      display: none; /* 기본은 안보이게 */
+      z-index: 2;
     }
     .item {
       padding: 8px;
@@ -70,18 +61,22 @@
     .item:hover {
       background-color: #f0f0f0;
     }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 왼쪽 상단: 아파트, 관심, 내 위치 -->
+  <!-- 왼쪽 상단 버튼 -->
   <div id="topControls">
     <button class="top-btn">아파트</button>
     <button class="top-btn">관심</button>
     <button class="top-btn" onclick="moveToCurrentLocation()">내 위치</button>
   </div>
 
-  <!-- 오른쪽 상단: 검색창 -->
+  <!-- 오른쪽 상단 검색창 -->
   <div id="searchBox">
     <input type="text" id="keyword" placeholder="검색어를 입력하세요" style="width: 200px; height: 30px;">
     <button onclick="searchPlaces()">검색</button>
@@ -90,7 +85,7 @@
   <!-- 검색 결과 리스트 -->
   <div id="resultList"></div>
 
-  <!-- 지도 영역 -->
+  <!-- 지도 -->
   <div id="map"></div>
 
   <script>
@@ -119,7 +114,7 @@
       ps.keywordSearch(keyword, placesSearchCB);
     }
 
-    function placesSearchCB(data, status) {
+    function placesSearchCB(data, status, pagination) {
       if (status === kakao.maps.services.Status.OK) {
         displayPlaces(data);
       } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
@@ -183,6 +178,7 @@
       markers = [];
     }
 
+    // 📍 내 위치로 이동
     function moveToCurrentLocation() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
