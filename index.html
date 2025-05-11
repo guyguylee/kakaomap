@@ -3,14 +3,25 @@
 <head>
   <meta charset="utf-8">
   <title>부동산GPT 지도</title>
-  <script type="text/javascript"
-    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=bfd55780f8253cce45449ed9df7b7c7a&autoload=true">
-  </script>
+  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=bfd55780f8253cce45449ed9df7b7c7a&libraries=services"></script>
   <style>
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
+    }
+    #searchBox {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      background: white;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      display: flex;
+      gap: 5px;
     }
     #map {
       width: 100%;
@@ -19,14 +30,92 @@
   </style>
 </head>
 <body>
+
+  <!-- 주소 검색창 + 현재위치 버튼 -->
+  <div id="searchBox">
+    <input type="text" id="address" placeholder="주소를 입력하세요" style="width: 200px; height: 30px;">
+    <button onclick="searchAddress()">검색</button>
+    <button onclick="moveToCurrentLocation()">현재위치</button>
+  </div>
+
+  <!-- 지도 영역 -->
   <div id="map"></div>
+
   <script>
     var container = document.getElementById('map');
     var options = {
-      center: new kakao.maps.LatLng(37.49334, 127.06672), // 개포동 은마아파트
+      center: new kakao.maps.LatLng(37.49334, 127.06672), // 은마아파트
       level: 3
     };
     var map = new kakao.maps.Map(container, options);
+
+    var geocoder = new kakao.maps.services.Geocoder();
+    var currentMarker = null; // 현재 마커 저장용
+
+    function searchAddress() {
+      var address = document.getElementById('address').value;
+      geocoder.addressSearch(address, function(result, status) {
+        if (status === kakao.maps.services.Status.OK) {
+          var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+          map.setCenter(coords);
+
+          // 이전 마커 제거
+          if (currentMarker) {
+            currentMarker.setMap(null);
+          }
+
+          // 🔥 새로운 마커 생성
+          currentMarker = new kakao.maps.Marker({
+            map: map,
+            position: coords
+          });
+
+          // 🔵 마커 클릭시 InfoWindow 열기
+          var infowindow = new kakao.maps.InfoWindow({
+            content: '<div style="padding:5px;font-size:14px;">' + address + '</div>'
+          });
+
+          kakao.maps.event.addListener(currentMarker, 'click', function() {
+            infowindow.open(map, currentMarker);
+          });
+        }
+      });
+    }
+
+    // 🟢 현재 위치 이동 함수
+    function moveToCurrentLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          var lat = position.coords.latitude;
+          var lon = position.coords.longitude;
+          var locPosition = new kakao.maps.LatLng(lat, lon);
+
+          map.setCenter(locPosition);
+
+          // 이전 마커 제거
+          if (currentMarker) {
+            currentMarker.setMap(null);
+          }
+
+          // 🔥 현재 위치에 마커 생성
+          currentMarker = new kakao.maps.Marker({
+            map: map,
+            position: locPosition
+          });
+
+          var infowindow = new kakao.maps.InfoWindow({
+            content: '<div style="padding:5px;font-size:14px;">현재 위치</div>'
+          });
+
+          kakao.maps.event.addListener(currentMarker, 'click', function() {
+            infowindow.open(map, currentMarker);
+          });
+        });
+      } else {
+        alert('GPS를 지원하지 않습니다');
+      }
+    }
   </script>
+
 </body>
 </html>
