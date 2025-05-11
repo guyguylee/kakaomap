@@ -3,9 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>부동산GPT 지도</title>
-  <script type="text/javascript"
-    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=8c5fbd54b6d882c2387c4bc6e499c906&autoload=true">
-  </script>
+  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=8c5fbd54b6d882c2387c4bc6e499c906&autoload=false"></script>
   <style>
     html, body {
       height: 100%;
@@ -20,13 +18,17 @@
 </head>
 <body>
   <div id="map"></div>
+
   <script>
-    var container = document.getElementById('map');
-    var options = {
-      center: new kakao.maps.LatLng(37.49334, 127.06672), // 개포동 은마아파트
-      level: 3
-    };
-    var map = new kakao.maps.Map(container, options);
+    kakao.maps.load(function() {
+      var container = document.getElementById('map');
+      var options = {
+        center: new kakao.maps.LatLng(37.49334, 127.06672),
+        level: 3
+      };
+      var map = new kakao.maps.Map(container, options);
+    });
   </script>
+
 </body>
 </html>
