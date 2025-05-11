@@ -10,11 +10,27 @@
       margin: 0;
       padding: 0;
     }
+    #topControls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 3;
+      display: flex;
+      gap: 5px;
+    }
+    .top-btn {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
     #searchBox {
       position: absolute;
       top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
+      right: 10px;
       z-index: 3;
       background: white;
       padding: 8px;
@@ -49,32 +65,22 @@
       width: 100%;
       height: 100%;
     }
-    #myLocationBtn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 4;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
   </style>
 </head>
 <body>
 
-  <!-- 검색창 -->
+  <!-- 왼쪽 상단 버튼 -->
+  <div id="topControls">
+    <button class="top-btn">아파트</button>
+    <button class="top-btn">관심</button>
+    <button class="top-btn" onclick="moveToCurrentLocation()">내 위치</button>
+  </div>
+
+  <!-- 오른쪽 상단 검색창 -->
   <div id="searchBox">
     <input type="text" id="keyword" placeholder="검색어를 입력하세요" style="width: 200px; height: 30px;">
     <button onclick="searchPlaces()">검색</button>
   </div>
-
-  <!-- 현재 위치 버튼 -->
-  <button id="myLocationBtn" onclick="moveToCurrentLocation()">내 위치</button>
 
   <!-- 검색 결과 리스트 -->
   <div id="resultList"></div>
@@ -85,8 +91,8 @@
   <script>
     var mapContainer = document.getElementById('map');
     var mapOption = { 
-      center: new kakao.maps.LatLng(37.49334, 127.06672), // ✅ 은마아파트 중심
-      level: 3 
+      center: new kakao.maps.LatLng(37.49334, 127.06672),
+      level: 3
     };
     var map = new kakao.maps.Map(mapContainer, mapOption);
 
@@ -130,7 +136,7 @@
         addMarker(place);
       }
 
-      listEl.style.display = 'block'; // 검색 결과 보이기
+      listEl.style.display = 'block';
     }
 
     function addListItem(place, idx) {
@@ -144,7 +150,6 @@
         var moveLatLon = new kakao.maps.LatLng(place.y, place.x);
         map.setCenter(moveLatLon);
 
-        // 🔥 선택하면 검색창/리스트 닫기
         document.getElementById('keyword').value = '';
         document.getElementById('resultList').style.display = 'none';
       };
