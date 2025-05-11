@@ -6,19 +6,31 @@
   <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=bfd55780f8253cce45449ed9df7b7c7a&libraries=services"></script>
   <style>
     html, body {
+      width: 100%;
       height: 100%;
       margin: 0;
       padding: 0;
+    }
+    body {
+      position: relative;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
     }
     #topBar {
       position: absolute;
       top: 10px;
       left: 10px;
       right: 10px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
       z-index: 10;
+      display: flex;
+      gap: 5px;
+      align-items: center;
     }
     .top-btn {
       background: white;
@@ -33,14 +45,14 @@
     #dropdown {
       display: none;
       position: absolute;
-      top: 32px;
+      top: 30px;
       left: 0;
       background: white;
       border: 1px solid #ccc;
       border-radius: 4px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      z-index: 20;
       width: 100px;
+      z-index: 20;
     }
     .dropdown-item {
       padding: 6px 10px;
@@ -78,7 +90,7 @@
     }
     #resultList {
       position: absolute;
-      top: 55px;
+      top: 60px;
       left: 10px;
       right: 10px;
       background: white;
@@ -97,175 +109,169 @@
     .item:hover {
       background-color: #f0f0f0;
     }
-    #map {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
   </style>
 </head>
 <body>
 
-  <!-- 상단 한 줄 영역 -->
-  <div id="topBar">
-    <div class="top-btn" onclick="toggleDropdown()">아파트
-      <div id="dropdown">
-        <div class="dropdown-item">아파트</div>
-        <div class="dropdown-item">분양권</div>
-        <div class="dropdown-item">원룸</div>
-        <div class="dropdown-item">투룸</div>
-        <div class="dropdown-item">관심</div>
-      </div>
-    </div>
-    <button class="top-btn" onclick="moveToCurrentLocation()">내 위치</button>
-    <div id="searchBox">
-      <input type="text" id="keyword" placeholder="검색어를 입력하세요">
-      <button id="searchButton" onclick="searchPlaces()">검색</button>
+<!-- 지도 -->
+<div id="map"></div>
+
+<!-- 상단 바 -->
+<div id="topBar">
+  <div class="top-btn" onclick="toggleDropdown()">아파트
+    <div id="dropdown">
+      <div class="dropdown-item" onclick="selectCategory('아파트')">아파트</div>
+      <div class="dropdown-item" onclick="selectCategory('분양권')">분양권</div>
+      <div class="dropdown-item" onclick="selectCategory('원룸')">원룸</div>
+      <div class="dropdown-item" onclick="selectCategory('투룸')">투룸</div>
+      <div class="dropdown-item" onclick="selectCategory('관심')">관심</div>
     </div>
   </div>
+  <button class="top-btn" onclick="moveToCurrentLocation()">내 위치</button>
+  <div id="searchBox">
+    <input type="text" id="keyword" placeholder="검색어를 입력하세요">
+    <button id="searchButton" onclick="searchPlaces()">검색</button>
+  </div>
+</div>
 
-  <!-- 검색 결과 리스트 -->
-  <div id="resultList"></div>
+<!-- 검색 결과 리스트 -->
+<div id="resultList" style="display: none;"></div>
 
-  <!-- 지도 -->
-  <div id="map"></div>
+<script>
+  var map;
+  var ps;
+  var markers = [];
+  var selectedCategory = '아파트';
 
-  <script>
+  kakao.maps.load(function() {
     var mapContainer = document.getElementById('map');
-    var mapOption = { 
+    var mapOption = {
       center: new kakao.maps.LatLng(37.49334, 127.06672),
       level: 3
     };
-    var map = new kakao.maps.Map(mapContainer, mapOption);
+    map = new kakao.maps.Map(mapContainer, mapOption);
+    ps = new kakao.maps.services.Places();
+  });
 
-    var ps = new kakao.maps.services.Places();
-    var markers = [];
+  function toggleDropdown() {
+    var dropdown = document.getElementById('dropdown');
+    dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+  }
 
-    document.getElementById('keyword').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        searchPlaces();
-      }
+  function selectCategory(category) {
+    selectedCategory = category;
+    document.querySelector('.top-btn').childNodes[0].nodeValue = category;
+    document.getElementById('dropdown').style.display = 'none';
+  }
+
+  function searchPlaces() {
+    var keywordInput = document.getElementById('keyword').value.trim();
+    if (!keywordInput) {
+      alert('검색어를 입력하세요.');
+      return;
+    }
+    var keyword = selectedCategory + " " + keywordInput;
+    ps.keywordSearch(keyword, placesSearchCB);
+  }
+
+  function placesSearchCB(data, status, pagination) {
+    if (status === kakao.maps.services.Status.OK) {
+      displayPlaces(data);
+    } else {
+      alert('검색 결과가 없습니다.');
+    }
+  }
+
+  function displayPlaces(places) {
+    var listEl = document.getElementById('resultList');
+    listEl.innerHTML = '';
+
+    clearMarkers();
+
+    for (var i = 0; i < places.length; i++) {
+      var place = places[i];
+      addListItem(place, i);
+      addMarker(place);
+    }
+
+    listEl.style.display = 'block';
+  }
+
+  function addListItem(place, idx) {
+    var listEl = document.getElementById('resultList');
+    var itemEl = document.createElement('div');
+    itemEl.className = 'item';
+
+    var gu = place.address_name ? place.address_name.split(' ')[1] : '';
+
+    itemEl.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span>${place.place_name}</span>
+        <span style="font-size: 11px; color: gray;">${gu}</span>
+      </div>
+    `;
+
+    listEl.appendChild(itemEl);
+
+    itemEl.onclick = function() {
+      var moveLatLon = new kakao.maps.LatLng(place.y, place.x);
+      map.setCenter(moveLatLon);
+
+      document.getElementById('keyword').value = '';
+      document.getElementById('resultList').style.display = 'none';
+    };
+  }
+
+  function addMarker(place) {
+    var marker = new kakao.maps.Marker({
+      map: map,
+      position: new kakao.maps.LatLng(place.y, place.x)
+    });
+    markers.push(marker);
+
+    var infowindow = new kakao.maps.InfoWindow({
+      content: '<div style="padding:5px;font-size:14px;">' + place.place_name + '</div>'
     });
 
-    function toggleDropdown() {
-      var dropdown = document.getElementById('dropdown');
-      dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+    kakao.maps.event.addListener(marker, 'click', function() {
+      infowindow.open(map, marker);
+    });
+  }
+
+  function clearMarkers() {
+    for (var i = 0; i < markers.length; i++) {
+      markers[i].setMap(null);
     }
+    markers = [];
+  }
 
-    function searchPlaces() {
-      var keyword = document.getElementById('keyword').value;
-      if (!keyword.trim()) {
-        alert('검색어를 입력하세요.');
-        return;
-      }
-      ps.keywordSearch(keyword, placesSearchCB);
-    }
+  function moveToCurrentLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var lat = position.coords.latitude;
+        var lon = position.coords.longitude;
+        var locPosition = new kakao.maps.LatLng(lat, lon);
 
-    function placesSearchCB(data, status, pagination) {
-      if (status === kakao.maps.services.Status.OK) {
-        displayPlaces(data);
-      } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
-        alert('검색 결과가 없습니다.');
-      } else if (status === kakao.maps.services.Status.ERROR) {
-        alert('검색 중 오류가 발생했습니다.');
-      }
-    }
+        map.setCenter(locPosition);
 
-    function displayPlaces(places) {
-      var listEl = document.getElementById('resultList');
-      listEl.innerHTML = '';
-
-      clearMarkers();
-
-      for (var i = 0; i < places.length; i++) {
-        var place = places[i];
-        addListItem(place, i);
-        addMarker(place);
-      }
-
-      listEl.style.display = 'block';
-    }
-
-    function addListItem(place, idx) {
-      var listEl = document.getElementById('resultList');
-      var itemEl = document.createElement('div');
-      itemEl.className = 'item';
-
-      var gu = place.address_name ? place.address_name.split(' ')[1] : '';
-
-      itemEl.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span>${place.place_name}</span>
-          <span style="font-size: 11px; color: gray;">${gu}</span>
-        </div>
-      `;
-
-      listEl.appendChild(itemEl);
-
-      itemEl.onclick = function() {
-        var moveLatLon = new kakao.maps.LatLng(place.y, place.x);
-        map.setCenter(moveLatLon);
-
-        document.getElementById('keyword').value = '';
-        document.getElementById('resultList').style.display = 'none';
-      };
-    }
-
-    function addMarker(place) {
-      var marker = new kakao.maps.Marker({
-        map: map,
-        position: new kakao.maps.LatLng(place.y, place.x)
-      });
-      markers.push(marker);
-
-      var infowindow = new kakao.maps.InfoWindow({
-        content: '<div style="padding:5px;font-size:14px;">' + place.place_name + '</div>'
-      });
-
-      kakao.maps.event.addListener(marker, 'click', function() {
-        infowindow.open(map, marker);
-      });
-    }
-
-    function clearMarkers() {
-      for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-      }
-      markers = [];
-    }
-
-    function moveToCurrentLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          var lat = position.coords.latitude;
-          var lon = position.coords.longitude;
-          var locPosition = new kakao.maps.LatLng(lat, lon);
-
-          map.setCenter(locPosition);
-
-          var marker = new kakao.maps.Marker({
-            map: map,
-            position: locPosition
-          });
-
-          var infowindow = new kakao.maps.InfoWindow({
-            content: '<div style="padding:5px;font-size:14px;">내 위치</div>'
-          });
-          infowindow.open(map, marker);
-
-        }, function(error) {
-          alert('위치 정보를 가져올 수 없습니다.');
+        var marker = new kakao.maps.Marker({
+          map: map,
+          position: locPosition
         });
-      } else {
-        alert('이 브라우저에서는 GPS를 지원하지 않습니다.');
-      }
+
+        var infowindow = new kakao.maps.InfoWindow({
+          content: '<div style="padding:5px;font-size:14px;">내 위치</div>'
+        });
+        infowindow.open(map, marker);
+
+      }, function(error) {
+        alert('위치 정보를 가져올 수 없습니다.');
+      });
+    } else {
+      alert('이 브라우저에서는 GPS를 지원하지 않습니다.');
     }
-  </script>
+  }
+</script>
 
 </body>
 </html>
