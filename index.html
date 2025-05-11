@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>부동산GPT 지도검색</title>
   <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=bfd55780f8253cce45449ed9df7b7c7a&libraries=services"></script>
   <style>
@@ -10,35 +10,92 @@
       margin: 0;
       padding: 0;
     }
-    #topControls {
+    #map {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      z-index: 0;
+    }
+    #topBar {
       position: absolute;
       top: 10px;
       left: 10px;
-      z-index: 3;
+      right: 10px;
       display: flex;
-      gap: 5px;
+      align-items: center;
+      gap: 6px;
+      z-index: 3;
     }
-    .top-btn {
+    #dropdown {
+      position: relative;
+    }
+    #dropdownBtn {
       background: white;
       border: 1px solid #ccc;
       border-radius: 6px;
-      padding: 6px 10px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    #dropdownMenu {
+      display: none;
+      position: absolute;
+      top: 36px;
+      left: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      flex-direction: column;
+      min-width: 80px;
+    }
+    #dropdownMenu button {
+      background: none;
+      border: none;
+      padding: 6px 12px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    #dropdownMenu button:hover {
+      background: #f0f0f0;
+    }
+    #locationBtn {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 6px 12px;
       font-size: 12px;
       cursor: pointer;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     #searchBox {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 3;
+      display: flex;
+      align-items: center;
+      margin-left: auto;
       background: white;
-      padding: 8px;
+      padding: 6px;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      display: flex;
-      gap: 5px;
-      align-items: center;
+    }
+    #keyword {
+      width: 160px;
+      height: 28px;
+      font-size: 12px;
+      padding: 4px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #searchBtn {
+      margin-left: 4px;
+      padding: 4px 10px;
+      font-size: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
     }
     #resultList {
       position: absolute;
@@ -61,151 +118,164 @@
     .item:hover {
       background-color: #f0f0f0;
     }
-    #map {
-      width: 100%;
-      height: 100%;
-    }
   </style>
 </head>
 <body>
 
-  <!-- 왼쪽 상단 버튼 -->
-  <div id="topControls">
-    <button class="top-btn">아파트</button>
-    <button class="top-btn">관심</button>
-    <button class="top-btn" onclick="moveToCurrentLocation()">내 위치</button>
+<!-- 상단 바 -->
+<div id="topBar">
+  <div id="dropdown">
+    <button id="dropdownBtn">아파트 ▼</button>
+    <div id="dropdownMenu">
+      <button onclick="selectCategory('아파트')">아파트</button>
+      <button onclick="selectCategory('분양권')">분양권</button>
+      <button onclick="selectCategory('원룸')">원룸</button>
+      <button onclick="selectCategory('투룸')">투룸</button>
+      <button onclick="selectCategory('관심')">관심</button>
+    </div>
   </div>
+  <button id="locationBtn" onclick="moveToCurrentLocation()">내 위치</button>
 
-  <!-- 오른쪽 상단 검색창 -->
   <div id="searchBox">
-    <input type="text" id="keyword" placeholder="검색어를 입력하세요" style="width: 200px; height: 30px;">
-    <button onclick="searchPlaces()">검색</button>
+    <input type="text" id="keyword" placeholder="검색어를 입력하세요">
+    <button id="searchBtn" onclick="searchPlaces()">검색</button>
   </div>
+</div>
 
-  <!-- 검색 결과 리스트 -->
-  <div id="resultList"></div>
+<!-- 검색 결과 리스트 -->
+<div id="resultList" style="display:none;"></div>
 
-  <!-- 지도 -->
-  <div id="map"></div>
+<!-- 지도 -->
+<div id="map"></div>
 
-  <script>
-    var mapContainer = document.getElementById('map');
-    var mapOption = { 
-      center: new kakao.maps.LatLng(37.49334, 127.06672),
-      level: 3
+<script>
+  var mapContainer = document.getElementById('map');
+  var mapOption = {
+    center: new kakao.maps.LatLng(37.49334, 127.06672),
+    level: 3
+  };
+  var map = new kakao.maps.Map(mapContainer, mapOption);
+
+  var ps = new kakao.maps.services.Places();
+  var markers = [];
+  var currentCategory = '아파트';
+
+  // 드롭다운 토글
+  document.getElementById('dropdownBtn').onclick = function() {
+    var menu = document.getElementById('dropdownMenu');
+    menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+  };
+
+  function selectCategory(category) {
+    currentCategory = category;
+    document.getElementById('dropdownBtn').innerText = category + ' ▼';
+    document.getElementById('dropdownMenu').style.display = 'none';
+  }
+
+  // 검색 버튼 / 엔터키
+  document.getElementById('keyword').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      searchPlaces();
+    }
+  });
+
+  function searchPlaces() {
+    var keyword = document.getElementById('keyword').value;
+    if (!keyword.trim()) {
+      alert('검색어를 입력하세요.');
+      return;
+    }
+    ps.keywordSearch(keyword, placesSearchCB);
+  }
+
+  function placesSearchCB(data, status, pagination) {
+    if (status === kakao.maps.services.Status.OK) {
+      displayPlaces(data);
+    } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+      alert('검색 결과가 없습니다.');
+    } else if (status === kakao.maps.services.Status.ERROR) {
+      alert('검색 중 오류가 발생했습니다.');
+    }
+  }
+
+  function displayPlaces(places) {
+    var listEl = document.getElementById('resultList');
+    listEl.innerHTML = '';
+
+    clearMarkers();
+
+    for (var i = 0; i < places.length; i++) {
+      var place = places[i];
+      addListItem(place);
+      addMarker(place);
+    }
+    listEl.style.display = 'block';
+  }
+
+  function addListItem(place) {
+    var listEl = document.getElementById('resultList');
+    var itemEl = document.createElement('div');
+    itemEl.className = 'item';
+    itemEl.innerHTML = `${place.place_name} <span style="float:right;color:gray;font-size:11px;">${place.address_name.split(' ')[0]}</span>`;
+    listEl.appendChild(itemEl);
+
+    itemEl.onclick = function() {
+      var moveLatLon = new kakao.maps.LatLng(place.y, place.x);
+      map.setCenter(moveLatLon);
+      document.getElementById('keyword').value = '';
+      document.getElementById('resultList').style.display = 'none';
     };
-    var map = new kakao.maps.Map(mapContainer, mapOption);
+  }
 
-    var ps = new kakao.maps.services.Places();
-    var markers = [];
+  function addMarker(place) {
+    var marker = new kakao.maps.Marker({
+      map: map,
+      position: new kakao.maps.LatLng(place.y, place.x)
+    });
+    markers.push(marker);
 
-    document.getElementById('keyword').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        searchPlaces();
-      }
+    var infowindow = new kakao.maps.InfoWindow({
+      content: '<div style="padding:5px;font-size:14px;">' + place.place_name + '</div>'
     });
 
-    function searchPlaces() {
-      var keyword = document.getElementById('keyword').value;
-      if (!keyword.trim()) {
-        alert('검색어를 입력하세요.');
-        return;
-      }
-      ps.keywordSearch(keyword, placesSearchCB);
+    kakao.maps.event.addListener(marker, 'click', function() {
+      infowindow.open(map, marker);
+    });
+  }
+
+  function clearMarkers() {
+    for (var i = 0; i < markers.length; i++) {
+      markers[i].setMap(null);
     }
+    markers = [];
+  }
 
-    function placesSearchCB(data, status, pagination) {
-      if (status === kakao.maps.services.Status.OK) {
-        displayPlaces(data);
-      } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
-        alert('검색 결과가 없습니다.');
-      } else if (status === kakao.maps.services.Status.ERROR) {
-        alert('검색 중 오류가 발생했습니다.');
-      }
-    }
+  function moveToCurrentLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var lat = position.coords.latitude;
+        var lon = position.coords.longitude;
+        var locPosition = new kakao.maps.LatLng(lat, lon);
 
-    function displayPlaces(places) {
-      var listEl = document.getElementById('resultList');
-      listEl.innerHTML = '';
+        map.setCenter(locPosition);
 
-      clearMarkers();
-
-      for (var i = 0; i < places.length; i++) {
-        var place = places[i];
-        addListItem(place, i);
-        addMarker(place);
-      }
-
-      listEl.style.display = 'block';
-    }
-
-    function addListItem(place, idx) {
-      var listEl = document.getElementById('resultList');
-      var itemEl = document.createElement('div');
-      itemEl.className = 'item';
-      itemEl.innerText = place.place_name;
-      listEl.appendChild(itemEl);
-
-      itemEl.onclick = function() {
-        var moveLatLon = new kakao.maps.LatLng(place.y, place.x);
-        map.setCenter(moveLatLon);
-
-        document.getElementById('keyword').value = '';
-        document.getElementById('resultList').style.display = 'none';
-      };
-    }
-
-    function addMarker(place) {
-      var marker = new kakao.maps.Marker({
-        map: map,
-        position: new kakao.maps.LatLng(place.y, place.x)
-      });
-      markers.push(marker);
-
-      var infowindow = new kakao.maps.InfoWindow({
-        content: '<div style="padding:5px;font-size:14px;">' + place.place_name + '</div>'
-      });
-
-      kakao.maps.event.addListener(marker, 'click', function() {
-        infowindow.open(map, marker);
-      });
-    }
-
-    function clearMarkers() {
-      for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-      }
-      markers = [];
-    }
-
-    // 📍 내 위치로 이동
-    function moveToCurrentLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          var lat = position.coords.latitude;
-          var lon = position.coords.longitude;
-          var locPosition = new kakao.maps.LatLng(lat, lon);
-
-          map.setCenter(locPosition);
-
-          var marker = new kakao.maps.Marker({
-            map: map,
-            position: locPosition
-          });
-
-          var infowindow = new kakao.maps.InfoWindow({
-            content: '<div style="padding:5px;font-size:14px;">내 위치</div>'
-          });
-          infowindow.open(map, marker);
-
-        }, function(error) {
-          alert('위치 정보를 가져올 수 없습니다.');
+        var marker = new kakao.maps.Marker({
+          map: map,
+          position: locPosition
         });
-      } else {
-        alert('이 브라우저에서는 GPS를 지원하지 않습니다.');
-      }
+
+        var infowindow = new kakao.maps.InfoWindow({
+          content: '<div style="padding:5px;font-size:14px;">내 위치</div>'
+        });
+        infowindow.open(map, marker);
+      }, function(error) {
+        alert('위치 정보를 가져올 수 없습니다.');
+      });
+    } else {
+      alert('이 브라우저는 위치정보를 지원하지 않습니다.');
     }
-  </script>
+  }
+</script>
 
 </body>
 </html>
