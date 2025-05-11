@@ -67,14 +67,22 @@
   <script>
     var mapContainer = document.getElementById('map');
     var mapOption = { 
-      center: new kakao.maps.LatLng(37.5665, 126.9780), // 기본: 서울
-      level: 5
+      center: new kakao.maps.LatLng(37.49334, 127.06672), // ✅ 은마아파트 중심
+      level: 3 // ✅ 레벨 3 (가깝게 보기)
     };
     var map = new kakao.maps.Map(mapContainer, mapOption);
 
     var ps = new kakao.maps.services.Places(); // 장소 검색 객체
-    var markers = []; // 마커 배열
+    var markers = []; // 생성된 마커들 저장
 
+    // 🔥 검색창에서 Enter 키 누르면 바로 검색 실행
+    document.getElementById('keyword').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        searchPlaces();
+      }
+    });
+
+    // 🔍 키워드로 장소 검색
     function searchPlaces() {
       var keyword = document.getElementById('keyword').value;
       if (!keyword.trim()) {
@@ -84,6 +92,7 @@
       ps.keywordSearch(keyword, placesSearchCB);
     }
 
+    // 📋 장소 검색 결과 콜백
     function placesSearchCB(data, status, pagination) {
       if (status === kakao.maps.services.Status.OK) {
         displayPlaces(data);
@@ -94,6 +103,7 @@
       }
     }
 
+    // 📋 검색 결과 표시
     function displayPlaces(places) {
       var listEl = document.getElementById('resultList');
       listEl.innerHTML = '';
@@ -107,6 +117,7 @@
       }
     }
 
+    // 리스트 아이템 추가
     function addListItem(place, idx) {
       var listEl = document.getElementById('resultList');
       var itemEl = document.createElement('div');
@@ -120,6 +131,7 @@
       };
     }
 
+    // 지도에 마커 추가
     function addMarker(place) {
       var marker = new kakao.maps.Marker({
         map: map,
@@ -136,6 +148,7 @@
       });
     }
 
+    // 기존 마커 지우기
     function clearMarkers() {
       for (var i = 0; i < markers.length; i++) {
         markers[i].setMap(null);
