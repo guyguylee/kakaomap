@@ -1,3 +1,17 @@
+1. 검색창과 아파트, 분양권, 원룸투룸 창이 너무 작아...
+
+다방 지도랑 비교해서, 창크기와 폰트를 조절해줘...
+
+2.  최근검색 삭제 버튼 만들어줘
+
+3. 검색 한글로 된 버튼 없애고, 다방이랑 동일하게 돋보기 아이콘으로 바꿔줘
+
+4. 최근검색어는 영구저장
+
+5. 검색어 입력하고, 엔터를 눌러도 검색되게(안되어 있으면 적용해줘)
+
+
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -96,7 +110,7 @@ function addListItem(place) {
   var itemEl = document.createElement('div');
   itemEl.className = 'item';
   var gu = place.address_name ? place.address_name.split(' ')[1] : '';
-  itemEl.innerHTML = `<div style="display:flex;justify-content:space-between;"><span>${place.place_name}</span><span style="font-size:12px;color:gray;">${gu}</span></div>`;
+  itemEl.innerHTML = <div style="display:flex;justify-content:space-between;"><span>${place.place_name}</span><span style="font-size:12px;color:gray;">${gu}</span></div>;
   itemEl.onclick = function() {
     var moveLatLon = new kakao.maps.LatLng(place.y, place.x);
     map.setCenter(moveLatLon);
@@ -109,7 +123,7 @@ function addListItem(place) {
 function addMarker(place) {
   var marker = new kakao.maps.Marker({ map: map, position: new kakao.maps.LatLng(place.y, place.x) });
   markers.push(marker);
-  var infowindow = new kakao.maps.InfoWindow({ content: `<div style="padding:5px;font-size:14px;">${place.place_name}</div>` });
+  var infowindow = new kakao.maps.InfoWindow({ content: <div style="padding:5px;font-size:14px;">${place.place_name}</div> });
   kakao.maps.event.addListener(marker, 'click', function() { infowindow.open(map, marker); });
 }
 
