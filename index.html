@@ -38,9 +38,8 @@
       font-size: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-    .btn img {
-      width: 24px;
-      height: 24px;
+    .btn .emoji {
+      font-size: 24px;
       margin-bottom: 4px;
     }
     #searchBox {
@@ -91,9 +90,8 @@
       font-size: 16px;
       cursor: pointer;
     }
-    .dropdown-item img {
-      width: 24px;
-      height: 24px;
+    .dropdown-item .emoji {
+      font-size: 24px;
       margin-right: 12px;
     }
     .dropdown-item:hover {
@@ -114,7 +112,7 @@
 
 <div id="topBar">
   <div class="btn" id="menuButton" onclick="toggleDropdown()">
-    <img id="menuIcon" src="https://img.icons8.com/color/48/apartment.png" alt="아파트">
+    <div class="emoji" id="menuEmoji">🏢</div>
     <div id="menuLabel">아파트</div>
   </div>
 
@@ -129,20 +127,20 @@
 </div>
 
 <div id="dropdown">
-  <div class="dropdown-item" onclick="selectMenu('아파트', 'https://img.icons8.com/color/48/apartment.png')">
-    <img src="https://img.icons8.com/color/48/apartment.png" alt="아파트"> 아파트
+  <div class="dropdown-item" onclick="selectMenu('아파트', '🏢')">
+    <div class="emoji">🏢</div> 아파트
   </div>
-  <div class="dropdown-item" onclick="selectMenu('분양권', 'https://img.icons8.com/color/48/key.png')">
-    <img src="https://img.icons8.com/color/48/key.png" alt="분양권"> 분양권
+  <div class="dropdown-item" onclick="selectMenu('분양권', '🔑')">
+    <div class="emoji">🔑</div> 분양권
   </div>
-  <div class="dropdown-item" onclick="selectMenu('원룸', 'https://img.icons8.com/color/48/bedroom.png')">
-    <img src="https://img.icons8.com/color/48/bedroom.png" alt="원룸"> 원룸
+  <div class="dropdown-item" onclick="selectMenu('원룸', '🛏️')">
+    <div class="emoji">🛏️</div> 원룸
   </div>
-  <div class="dropdown-item" onclick="selectMenu('투룸', 'https://img.icons8.com/color/48/home.png')">
-    <img src="https://img.icons8.com/color/48/home.png" alt="투룸"> 투룸
+  <div class="dropdown-item" onclick="selectMenu('투룸', '🏠')">
+    <div class="emoji">🏠</div> 투룸
   </div>
-  <div class="dropdown-item" onclick="selectMenu('관심', 'https://img.icons8.com/color/48/star.png')">
-    <img src="https://img.icons8.com/color/48/star.png" alt="관심"> 관심
+  <div class="dropdown-item" onclick="selectMenu('관심', '⭐')">
+    <div class="emoji">⭐</div> 관심
   </div>
 </div>
 
@@ -161,9 +159,9 @@ function toggleDropdown(){
   dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
 }
 
-function selectMenu(label, iconUrl){
+function selectMenu(label, emoji){
   document.getElementById('menuLabel').innerText = label;
-  document.getElementById('menuIcon').src = iconUrl;
+  document.getElementById('menuEmoji').innerText = emoji;
   document.getElementById('dropdown').style.display = 'none';
 }
 
