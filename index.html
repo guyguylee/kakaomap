@@ -34,6 +34,7 @@
       justify-content: center;
       cursor: pointer;
       font-size: 12px;
+      position: relative;
     }
     .btn img {
       width: 28px;
@@ -42,9 +43,9 @@
     }
     #dropdown {
       position: absolute;
-      top: 90px;
+      top: 80px;
       left: 8px;
-      width: 140px;
+      width: 160px;
       background: #fff;
       border: 1px solid #ddd;
       border-radius: 8px;
@@ -53,9 +54,16 @@
       z-index: 20;
     }
     .dropdown-item {
-      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
       font-size: 16px;
       cursor: pointer;
+    }
+    .dropdown-item img {
+      width: 24px;
+      height: 24px;
+      margin-right: 12px;
     }
     .dropdown-item:hover {
       background: #f0f0f0;
@@ -70,7 +78,7 @@
       align-items: center;
       padding: 0 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-right: 12px; /* 오른쪽 여백 추가 */
+      margin-right: 12px;
     }
     #keyword {
       flex: 1;
@@ -99,23 +107,35 @@
     }
   </style>
 </head>
+
 <body>
 
 <div id="topBar">
   <div class="btn" id="menuButton" onclick="toggleDropdown()">
-    <img src="https://img.icons8.com/ios-filled/50/000000/apartment.png" alt="아파트 아이콘">
-    아파트
+    <img id="menuIcon" src="https://img.icons8.com/color/48/apartment.png" alt="아파트 아이콘">
+    <div id="menuLabel">아파트</div>
   </div>
+
   <div id="dropdown">
-    <div class="dropdown-item" onclick="selectMenu('아파트', 'https://img.icons8.com/ios-filled/50/000000/apartment.png')">아파트</div>
-    <div class="dropdown-item" onclick="selectMenu('분양권', 'https://img.icons8.com/ios-filled/50/000000/key.png')">분양권</div>
-    <div class="dropdown-item" onclick="selectMenu('원룸', 'https://img.icons8.com/ios-filled/50/000000/bedroom.png')">원룸</div>
-    <div class="dropdown-item" onclick="selectMenu('투룸', 'https://img.icons8.com/ios-filled/50/000000/home.png')">투룸</div>
-    <div class="dropdown-item" onclick="selectMenu('관심', 'https://img.icons8.com/ios-filled/50/000000/star--v1.png')">관심</div>
+    <div class="dropdown-item" onclick="selectMenu('아파트', 'https://img.icons8.com/color/48/apartment.png')">
+      <img src="https://img.icons8.com/color/48/apartment.png" alt="아파트"> 아파트
+    </div>
+    <div class="dropdown-item" onclick="selectMenu('분양권', 'https://img.icons8.com/color/48/key.png')">
+      <img src="https://img.icons8.com/color/48/key.png" alt="분양권"> 분양권
+    </div>
+    <div class="dropdown-item" onclick="selectMenu('원룸', 'https://img.icons8.com/color/48/bedroom.png')">
+      <img src="https://img.icons8.com/color/48/bedroom.png" alt="원룸"> 원룸
+    </div>
+    <div class="dropdown-item" onclick="selectMenu('투룸', 'https://img.icons8.com/color/48/home.png')">
+      <img src="https://img.icons8.com/color/48/home.png" alt="투룸"> 투룸
+    </div>
+    <div class="dropdown-item" onclick="selectMenu('관심', 'https://img.icons8.com/color/48/star.png')">
+      <img src="https://img.icons8.com/color/48/star.png" alt="관심"> 관심
+    </div>
   </div>
 
   <div id="searchBox">
-    <input type="text" id="keyword" placeholder="검색어를 입력하세요" onfocus="showRecent()" onblur="hideRecent()" onkeydown="if(event.key==='Enter') searchPlaces()" />
+    <input type="text" id="keyword" placeholder="검색어를 입력하세요" onkeydown="if(event.key==='Enter') searchPlaces()" />
     <button id="searchButton" onclick="searchPlaces()">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#555" viewBox="0 0 24 24">
         <path d="M9.5 3a6.5 6.5 0 014.897 10.672l4.966 4.966-1.415 1.414-4.966-4.965A6.5 6.5 0 119.5 3zm0 2a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"/>
@@ -140,14 +160,17 @@ function toggleDropdown(){
 }
 
 function selectMenu(label, iconUrl){
-  const menuButton = document.getElementById('menuButton');
-  menuButton.innerHTML = `<img src="${iconUrl}" alt="${label} 아이콘"><div>${label}</div>`;
+  document.getElementById('menuLabel').innerText = label;
+  document.getElementById('menuIcon').src = iconUrl;
   document.getElementById('dropdown').style.display = 'none';
 }
 
 function searchPlaces(){
   const kw = document.getElementById('keyword').value.trim();
-  if(!kw) return alert('검색어를 입력하세요.');
+  if(!kw) {
+    alert('검색어를 입력하세요.');
+    return;
+  }
   ps.keywordSearch(kw, placesSearchCB);
 }
 
@@ -161,6 +184,9 @@ function placesSearchCB(data, status){
       });
       markers.push(marker);
     });
+    if(data.length > 0) {
+      map.setCenter(new kakao.maps.LatLng(data[0].y, data[0].x));
+    }
   } else {
     alert('검색 결과가 없습니다.');
   }
