@@ -1,217 +1,206 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>부동산GPT 지도검색</title>
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=8c5fbd54b6d882c2387c4bc6e499c906&libraries=services"></script>
   <style>
-    html, body { height:100%; margin:0; padding:0; font-family:sans-serif }
+    html, body { height: 100%; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
     #topBar {
-      position:absolute; top:8px; left:8px; right:8px;
-      display:flex; align-items:center; gap:8px; z-index:10;
+      position: absolute; top: 8px; left: 8px; right: 8px;
+      display: flex; align-items: center;
+      gap: 8px; z-index: 10;
     }
+
     .btn {
-      height:56px; background:#fff; border:1px solid #ddd; border-radius:12px;
-      display:flex; align-items:center; justify-content:center; padding:0 14px; cursor:pointer;
-      font-size:18px; white-space:nowrap;
+      min-width: 80px; height: 56px;
+      background: #fff; border: 1px solid #ddd; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
     }
+
     #dropdown {
-      position:absolute; top:72px; left:0; width:160px; background:#fff;
-      border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.2);
-      display:none; z-index:20;
+      position: absolute; top: 64px; left: 0;
+      width: 160px; background: #fff;
+      border: 1px solid #ddd; border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      display: none; z-index: 20;
     }
     .dropdown-item {
-      padding:14px 18px; font-size:18px; cursor:pointer;
-      display:flex; align-items:center; gap:10px;
+      padding: 14px 18px; font-size: 18px; cursor: pointer; display: flex; align-items: center; gap: 8px;
     }
-    .dropdown-item:hover { background:#f0f0f0 }
+    .dropdown-item:hover { background: #f0f0f0; }
 
     #searchBox {
-      flex:1;
-      height:56px;
-      background:#fff;
-      border:1px solid #ddd;
-      border-radius:12px;
-      display:flex;
-      align-items:center;
-      padding:0 16px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.1);
-      margin-right:8px;
+      flex: 1; height: 56px;
+      background: #fff; border: 1px solid #ddd; border-radius: 12px;
+      display: flex; align-items: center; padding: 0 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
+
     #keyword {
-      flex:1;
-      border:none;
-      outline:none;
-      font-size:18px;
-      background:transparent;
+      flex: 1; border: none; outline: none;
+      font-size: 18px; background: transparent;
     }
+
     #searchButton {
-      background:none;
-      border:none;
-      width:32px;
-      height:32px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
+      background: none; border: none;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
     }
+
     #recentList {
-      position:absolute; top:64px; left:0; right:0; background:#fff;
-      border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.2);
-      display:none; z-index:15; max-height:240px; overflow-y:auto;
+      position: absolute; top: 64px; left: 0; right: 0;
+      background: #fff; border: 1px solid #ddd; border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      display: none; z-index: 15; max-height: 240px; overflow-y: auto;
     }
+
     .recent-item {
-      display:flex; justify-content:space-between; align-items:center;
-      padding:12px 16px; font-size:18px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; font-size: 18px;
     }
-    .recent-item:hover { background:#f0f0f0 }
-    .delete-btn { background:none; border:none; font-size:18px; color:#888; cursor:pointer; }
+    .recent-item:hover { background: #f0f0f0; }
+    .delete-btn { background: none; border: none; font-size: 18px; color: #888; cursor: pointer; }
 
     #resultList {
-      position:absolute; top:90px; left:8px; right:8px; background:#fff;
-      border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.2);
-      max-height:240px; overflow-y:auto; display:none; z-index:9;
+      position: absolute; top: 90px; left: 8px; right: 8px;
+      background: #fff; border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      max-height: 240px; overflow-y: auto; display: none; z-index: 9;
     }
-    .item { padding:12px 16px; font-size:18px; cursor:pointer; border-bottom:1px solid #eee }
-    .item:hover { background:#f9f9f9 }
+    .item { padding: 12px 16px; font-size: 18px; cursor: pointer; border-bottom: 1px solid #eee; }
+    .item:hover { background: #f9f9f9; }
 
-    #map { position:absolute; top:0; left:0; right:0; bottom:0; z-index:1 }
+    #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; }
   </style>
 </head>
 <body>
 
-  <div id="topBar">
-    <div class="btn" id="menuButton" onclick="toggleDropdown()">🏢 아파트</div>
-    <div id="dropdown">
-      <div class="dropdown-item" onclick="selectMenu('🏢', '아파트')">🏢 아파트</div>
-      <div class="dropdown-item" onclick="selectMenu('🔑', '분양권')">🔑 분양권</div>
-      <div class="dropdown-item" onclick="selectMenu('🛏️', '원룸')">🛏️ 원룸</div>
-      <div class="dropdown-item" onclick="selectMenu('🏠', '투룸')">🏠 투룸</div>
-      <div class="dropdown-item" onclick="selectMenu('⭐', '관심')">⭐ 관심</div>
-    </div>
-
-    <div id="searchBox">
-      <input type="text" id="keyword" placeholder="검색어를 입력하세요" onfocus="showRecent()" onblur="hideRecent()" onkeydown="if(event.key==='Enter') searchPlaces()" />
-      <button id="searchButton" onclick="searchPlaces()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#555" viewBox="0 0 24 24">
-          <path d="M9.5 3a6.5 6.5 0 014.897 10.672l4.966 4.966-1.415 1.414-4.966-4.965A6.5 6.5 0 119.5 3zm0 2a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"/>
-        </svg>
-      </button>
-      <div id="recentList"></div>
-    </div>
+<div id="topBar">
+  <div class="btn" id="menuButton" onclick="toggleDropdown()">
+    <span>🏢</span><span>아파트</span>
   </div>
 
-  <div id="resultList"></div>
-  <div id="map"></div>
+  <div id="dropdown">
+    <div class="dropdown-item" onclick="selectMenu('🏢', '아파트')">🏢 아파트</div>
+    <div class="dropdown-item" onclick="selectMenu('🔑', '분양권')">🔑 분양권</div>
+    <div class="dropdown-item" onclick="selectMenu('🛏️', '원룸')">🛏️ 원룸</div>
+    <div class="dropdown-item" onclick="selectMenu('🏠', '투룸')">🏠 투룸</div>
+    <div class="dropdown-item" onclick="selectMenu('⭐', '관심')">⭐ 관심</div>
+  </div>
 
-  <script>
-    const map = new kakao.maps.Map(document.getElementById('map'), {
-      center: new kakao.maps.LatLng(37.49334,127.06672), level:3
+  <div id="searchBox">
+    <input type="text" id="keyword" placeholder="검색어를 입력하세요" onfocus="showRecent()" onblur="hideRecent()" onkeydown="if(event.key==='Enter') searchPlaces()" />
+    <button id="searchButton" onclick="searchPlaces()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#555" viewBox="0 0 24 24">
+        <path d="M9.5 3a6.5 6.5 0 014.897 10.672l4.966 4.966-1.415 1.414-4.966-4.965A6.5 6.5 0 119.5 3zm0 2a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"/>
+      </svg>
+    </button>
+    <div id="recentList"></div>
+  </div>
+</div>
+
+<div id="resultList"></div>
+<div id="map"></div>
+
+<script>
+  const map = new kakao.maps.Map(document.getElementById('map'), { center: new kakao.maps.LatLng(37.49334,127.06672), level:3 });
+  const ps = new kakao.maps.services.Places();
+  let markers = [];
+
+  function toggleDropdown(){
+    const dd = document.getElementById('dropdown');
+    dd.style.display = dd.style.display==='block' ? 'none' : 'block';
+  }
+
+  function selectMenu(icon, text){
+    const menuButton = document.getElementById('menuButton');
+    menuButton.innerHTML = `<span>${icon}</span><span>${text}</span>`;
+    document.getElementById('dropdown').style.display = 'none';
+  }
+
+  function searchPlaces(){
+    const kw = document.getElementById('keyword').value.trim();
+    if(!kw) return alert('검색어를 입력하세요.');
+    saveRecent(kw);
+    ps.keywordSearch(kw, placesSearchCB);
+    document.getElementById('recentList').style.display = 'none';
+  }
+
+  function placesSearchCB(data, status){
+    if(status===kakao.maps.services.Status.OK){
+      displayPlaces(data);
+    } else {
+      alert('검색 결과가 없습니다.');
+    }
+  }
+
+  function displayPlaces(places){
+    const rl = document.getElementById('resultList');
+    rl.innerHTML = '';
+    clearMarkers();
+    places.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `<div style="display:flex;justify-content:space-between"><span>${p.place_name}</span><span style="font-size:14px;color:gray">${p.address_name.split(' ')[1]}</span></div>`;
+      div.onclick = () => {
+        map.setCenter(new kakao.maps.LatLng(p.y,p.x));
+        document.getElementById('keyword').value = '';
+        rl.style.display = 'none';
+      };
+      rl.appendChild(div);
+
+      const marker = new kakao.maps.Marker({ map, position: new kakao.maps.LatLng(p.y,p.x) });
+      markers.push(marker);
+      const iw = new kakao.maps.InfoWindow({ content: `<div style="padding:5px;font-size:14px">${p.place_name}</div>` });
+      kakao.maps.event.addListener(marker, 'click', () => iw.open(map, marker));
     });
-    const ps = new kakao.maps.services.Places();
-    let markers = [];
+    rl.style.display = 'block';
+  }
 
-    function toggleDropdown(){
-      const dd = document.getElementById('dropdown');
-      dd.style.display = dd.style.display==='block' ? 'none' : 'block';
-    }
+  function clearMarkers(){
+    markers.forEach(m => m.setMap(null));
+    markers = [];
+  }
 
-    function selectMenu(icon, text){
-      document.getElementById('menuButton').innerHTML = `${icon} ${text}`;
-      document.getElementById('dropdown').style.display = 'none';
-    }
+  function saveRecent(k){
+    let arr = JSON.parse(localStorage.getItem('recents')||'[]');
+    arr = arr.filter(x => x !== k);
+    arr.unshift(k);
+    if(arr.length > 5) arr.pop();
+    localStorage.setItem('recents', JSON.stringify(arr));
+  }
 
-    function searchPlaces(){
-      const kw = document.getElementById('keyword').value.trim();
-      if(!kw) return alert('검색어를 입력하세요.');
-      saveRecent(kw);
-      ps.keywordSearch(kw, placesSearchCB);
-      document.getElementById('recentList').style.display = 'none';
-    }
+  function showRecent(){
+    let arr = JSON.parse(localStorage.getItem('recents')||'[]');
+    const list = document.getElementById('recentList');
+    list.innerHTML = '';
+    arr.forEach(text => {
+      const row = document.createElement('div');
+      row.className = 'recent-item';
+      row.innerHTML = `<span>${text}</span><button class="delete-btn" onclick="deleteRecent('${text}')">✖️</button>`;
+      row.onclick = () => {
+        document.getElementById('keyword').value = text;
+        searchPlaces();
+      };
+      list.appendChild(row);
+    });
+    if(arr.length) list.style.display = 'block';
+  }
 
-    function placesSearchCB(data, status){
-      if(status===kakao.maps.services.Status.OK){
-        displayPlaces(data);
-      } else {
-        alert('검색 결과가 없습니다.');
-      }
-    }
+  function hideRecent(){
+    setTimeout(()=>{ document.getElementById('recentList').style.display = 'none'; }, 200);
+  }
 
-    function displayPlaces(places){
-      const rl = document.getElementById('resultList');
-      rl.innerHTML = '';
-      clearMarkers();
-      places.forEach(p => {
-        const div = document.createElement('div');
-        div.className = 'item';
-        const gu = p.address_name?.split(' ')[1]||'';
-        div.innerHTML = `
-          <div style="display:flex;justify-content:space-between">
-            <span>${p.place_name}</span>
-            <span style="font-size:14px;color:gray">${gu}</span>
-          </div>`;
-        div.onclick = () => {
-          map.setCenter(new kakao.maps.LatLng(p.y,p.x));
-          document.getElementById('keyword').value = '';
-          rl.style.display = 'none';
-        };
-        rl.appendChild(div);
-
-        const marker = new kakao.maps.Marker({ map, position: new kakao.maps.LatLng(p.y,p.x) });
-        markers.push(marker);
-
-        const iw = new kakao.maps.InfoWindow({
-          content:`<div style="padding:5px;font-size:14px">${p.place_name}</div>`
-        });
-        kakao.maps.event.addListener(marker, 'click', ()=>iw.open(map,marker));
-      });
-      rl.style.display = 'block';
-    }
-
-    function clearMarkers(){
-      markers.forEach(m=>m.setMap(null));
-      markers = [];
-    }
-
-    function saveRecent(k){
-      let arr = JSON.parse(localStorage.getItem('recents')||'[]');
-      arr = arr.filter(x=>x!==k);
-      arr.unshift(k);
-      if(arr.length>5) arr.pop();
-      localStorage.setItem('recents', JSON.stringify(arr));
-    }
-
-    function showRecent(){
-      let arr = JSON.parse(localStorage.getItem('recents')||'[]');
-      const list = document.getElementById('recentList');
-      list.innerHTML = '';
-      arr.forEach(text => {
-        const row = document.createElement('div');
-        row.className = 'recent-item';
-        row.innerHTML = `
-          <span>${text}</span>
-          <button class="delete-btn" onclick="deleteRecent('${text}')">✖️</button>
-        `;
-        row.onclick = () => {
-          document.getElementById('keyword').value = text;
-          searchPlaces();
-        };
-        list.appendChild(row);
-      });
-      if(arr.length) list.style.display='block';
-    }
-
-    function hideRecent(){
-      setTimeout(()=>{ document.getElementById('recentList').style.display='none'; },200);
-    }
-
-    function deleteRecent(text){
-      let arr = JSON.parse(localStorage.getItem('recents')||'[]');
-      arr = arr.filter(x=>x!==text);
-      localStorage.setItem('recents', JSON.stringify(arr));
-      showRecent();
-    }
-  </script>
+  function deleteRecent(text){
+    let arr = JSON.parse(localStorage.getItem('recents')||'[]');
+    arr = arr.filter(x => x !== text);
+    localStorage.setItem('recents', JSON.stringify(arr));
+    showRecent();
+  }
+</script>
 
 </body>
 </html>
