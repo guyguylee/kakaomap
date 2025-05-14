@@ -111,7 +111,7 @@
 <body>
 
 <div id="topBar">
-  <div class="btn" id="menuButton" onclick="toggleDropdown()">
+  <div class="btn" id="menuButton" onclick="toggleDropdown(event)">
     <div class="emoji" id="menuEmoji">🏢</div>
     <div id="menuLabel">아파트</div>
   </div>
@@ -154,7 +154,8 @@ const map = new kakao.maps.Map(document.getElementById('map'), {
 const ps = new kakao.maps.services.Places();
 let markers = [];
 
-function toggleDropdown(){
+function toggleDropdown(event){
+  event.stopPropagation();  // 드롭박스 클릭은 막지 않음
   const dd = document.getElementById('dropdown');
   dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
 }
@@ -196,6 +197,15 @@ function clearMarkers(){
   markers.forEach(m => m.setMap(null));
   markers = [];
 }
+
+// 외부 클릭 시 드롭박스 자동 닫기
+document.addEventListener('click', function(event){
+  const dropdown = document.getElementById('dropdown');
+  const menuButton = document.getElementById('menuButton');
+  if (dropdown.style.display === 'block' && !dropdown.contains(event.target) && !menuButton.contains(event.target)) {
+    dropdown.style.display = 'none';
+  }
+});
 </script>
 
 </body>
