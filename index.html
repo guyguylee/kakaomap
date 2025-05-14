@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>부동산GPT 지도검색</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=8c5fbd54b6d882c2387c4bc6e499c906&libraries=services"></script>
@@ -11,20 +11,22 @@
       margin: 0;
       padding: 0;
       font-family: 'Noto Sans KR', sans-serif;
+      background: #f9f9f9;
     }
     #topBar {
       position: absolute;
       top: 8px;
-      left: 8px;
-      right: 8px;
+      left: 4%;
+      right: 4%;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 2%;
       z-index: 10;
     }
     .btn {
-      width: 64px;
-      height: 72px;
+      width: 18%;
+      min-width: 60px;
+      height: 60px;
       background: #fff;
       border: 1px solid #ddd;
       border-radius: 12px;
@@ -34,43 +36,16 @@
       justify-content: center;
       cursor: pointer;
       font-size: 12px;
-      position: relative;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     .btn img {
-      width: 28px;
-      height: 28px;
-      margin-bottom: 4px;
-    }
-    #dropdown {
-      position: absolute;
-      top: 80px;
-      left: 8px;
-      width: 160px;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      display: none;
-      z-index: 20;
-    }
-    .dropdown-item {
-      display: flex;
-      align-items: center;
-      padding: 12px 16px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .dropdown-item img {
       width: 24px;
       height: 24px;
-      margin-right: 12px;
-    }
-    .dropdown-item:hover {
-      background: #f0f0f0;
+      margin-bottom: 4px;
     }
     #searchBox {
       flex: 1;
-      height: 56px;
+      height: 60px;
       background: #fff;
       border: 1px solid #ddd;
       border-radius: 12px;
@@ -78,7 +53,6 @@
       align-items: center;
       padding: 0 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-right: 12px;
     }
     #keyword {
       flex: 1;
@@ -90,12 +64,40 @@
     #searchButton {
       background: none;
       border: none;
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+    }
+    #dropdown {
+      position: absolute;
+      top: 72px;
+      left: 4%;
+      width: 40%;
+      max-width: 180px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 20;
+    }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 18px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .dropdown-item img {
+      width: 24px;
+      height: 24px;
+      margin-right: 12px;
+    }
+    .dropdown-item:hover {
+      background: #f0f0f0;
     }
     #map {
       position: absolute;
@@ -112,26 +114,8 @@
 
 <div id="topBar">
   <div class="btn" id="menuButton" onclick="toggleDropdown()">
-    <img id="menuIcon" src="https://img.icons8.com/color/48/apartment.png" alt="아파트 아이콘">
+    <img id="menuIcon" src="https://img.icons8.com/color/48/apartment.png" alt="아파트">
     <div id="menuLabel">아파트</div>
-  </div>
-
-  <div id="dropdown">
-    <div class="dropdown-item" onclick="selectMenu('아파트', 'https://img.icons8.com/color/48/apartment.png')">
-      <img src="https://img.icons8.com/color/48/apartment.png" alt="아파트"> 아파트
-    </div>
-    <div class="dropdown-item" onclick="selectMenu('분양권', 'https://img.icons8.com/color/48/key.png')">
-      <img src="https://img.icons8.com/color/48/key.png" alt="분양권"> 분양권
-    </div>
-    <div class="dropdown-item" onclick="selectMenu('원룸', 'https://img.icons8.com/color/48/bedroom.png')">
-      <img src="https://img.icons8.com/color/48/bedroom.png" alt="원룸"> 원룸
-    </div>
-    <div class="dropdown-item" onclick="selectMenu('투룸', 'https://img.icons8.com/color/48/home.png')">
-      <img src="https://img.icons8.com/color/48/home.png" alt="투룸"> 투룸
-    </div>
-    <div class="dropdown-item" onclick="selectMenu('관심', 'https://img.icons8.com/color/48/star.png')">
-      <img src="https://img.icons8.com/color/48/star.png" alt="관심"> 관심
-    </div>
   </div>
 
   <div id="searchBox">
@@ -141,6 +125,24 @@
         <path d="M9.5 3a6.5 6.5 0 014.897 10.672l4.966 4.966-1.415 1.414-4.966-4.965A6.5 6.5 0 119.5 3zm0 2a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"/>
       </svg>
     </button>
+  </div>
+</div>
+
+<div id="dropdown">
+  <div class="dropdown-item" onclick="selectMenu('아파트', 'https://img.icons8.com/color/48/apartment.png')">
+    <img src="https://img.icons8.com/color/48/apartment.png" alt="아파트"> 아파트
+  </div>
+  <div class="dropdown-item" onclick="selectMenu('분양권', 'https://img.icons8.com/color/48/key.png')">
+    <img src="https://img.icons8.com/color/48/key.png" alt="분양권"> 분양권
+  </div>
+  <div class="dropdown-item" onclick="selectMenu('원룸', 'https://img.icons8.com/color/48/bedroom.png')">
+    <img src="https://img.icons8.com/color/48/bedroom.png" alt="원룸"> 원룸
+  </div>
+  <div class="dropdown-item" onclick="selectMenu('투룸', 'https://img.icons8.com/color/48/home.png')">
+    <img src="https://img.icons8.com/color/48/home.png" alt="투룸"> 투룸
+  </div>
+  <div class="dropdown-item" onclick="selectMenu('관심', 'https://img.icons8.com/color/48/star.png')">
+    <img src="https://img.icons8.com/color/48/star.png" alt="관심"> 관심
   </div>
 </div>
 
